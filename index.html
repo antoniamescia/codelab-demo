@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What is an AI Agent?</title>
+<style>
+  section {
+    padding: 24px;
+    max-width: 700px;
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; background-color:#f4f4f4; color:#222;">
+
+  <header style="background-color:#2b2d42; color:#ffffff; padding:24px; text-align:center;">
+    <h1 style="margin:0; font-size:28px;">Codelab Demo</h1>
+  </header>
+
+  <main style="max-width:700px; margin:40px auto; padding:0 20px;">
+
+    <section id="agente" style="background-color:#ffffff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <h2 style="margin-top:0; color:#2b2d42;">What is an AI Agent?</h2>
+      <p style="line-height:1.6; font-size:16px;">
+        An AI agent is a program that doesn't just answer in one shot — it works through a
+        <strong>loop</strong>: it thinks about what needs to be done, uses a tool to act on the world,
+        observes what that tool returned, and then decides the next step based on that result.
+        You can see this exact loop in how this very file was created: I <em>thought</em> "I should
+        check the project folder before writing anything," so I <em>used a tool</em> (a shell command
+        to list the directory), <em>observed</em> that it was empty, and then <em>decided</em> the
+        next step was to write this HTML file directly instead of editing something that didn't
+        exist. That cycle — think, act, observe, decide — repeated as many times as needed, is what
+        separates an agent from a simple chatbot that only replies with text.
+      </p>
+    </section>
+
+    <section id="subagentes" style="margin-top:30px; background-color:#ffffff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <h2 style="margin-top:0; color:#2b2d42;">Subagents</h2>
+      <p style="line-height:1.6; font-size:16px;">
+        A <strong>subagent</strong> is essentially an instance of the agent that gets handed a scoped task and works with its <em>own</em> context window, separate from the main conversation and from any other subagent running at the same time. This means it doesn't carry the full history of the chat with the user, nor does it see what its "peers" are reasoning through: it only knows the instruction it was given and whatever it discovers on its own while working. That separation isn't a minor technical detail, it's precisely what makes <strong>running things in parallel</strong> possible: if two subagents shared the same context, their intermediate steps, mistakes, and decisions would blend together and pollute each other's reasoning. By keeping them isolated, the main agent can launch several subagents at once to explore code, research, or make changes simultaneously, then simply collect each one's final result, much like asking different colleagues to look into something independently and report back only the conclusion.
+      </p>
+    </section>
+
+    <section id="worktrees" style="margin-top:30px; background-color:#ffffff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <h2 style="margin-top:0; color:#2b2d42;">Git Worktrees</h2>
+      <p style="line-height:1.6; font-size:16px;">
+        A <strong>git worktree</strong> is a second working directory linked to the same repository, checked out to its own branch with its own files sitting on disk. Instead of one folder where the checked-out branch and file contents change every time you switch context, you get several folders that all share the same underlying <code>.git</code> history but can hold <em>different</em> code at the same time. That is exactly what makes it safe to run multiple coding agents side by side: each agent gets its own worktree to read from and write to, so its uncommitted edits, half-finished refactors, and generated files never land in the same directory as another agent's. Only once an agent commits does its work rejoin the shared history, at which point the usual git merge rules take over instead of two processes silently overwriting the same lines on disk.
+      </p>
+    </section>
+
+    <section id="workflows" style="margin-top:30px; background-color:#ffffff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      <h2 style="margin-top:0; color:#2b2d42;">Orchestration Workflows</h2>
+      <p style="line-height:1.6; font-size:16px;">
+        An <strong>orchestration workflow</strong> is a predefined script that decides, ahead of time, how work moves between agents: which subagent runs first, which steps can <em>fan out</em> to run in parallel, and where a verification pass has to pass before anything continues. The key difference from a single agent handling a list of requests in conversation is <em>who is doing the deciding</em>: in a plain chat, the model itself improvises the next step based on context, whereas in a workflow the sequence, branching, and hand-offs are fixed by code, so the same input reliably produces the same shape of process. This matters because improvisation is flexible but unpredictable, while a workflow trades some of that flexibility for <strong>repeatability</strong> — the same stages, checks, and outputs every time, even as the underlying model changes. In practice this looks like one agent drafting a plan, several subagents working pieces of it at once, and a dedicated step that checks the combined result before it's considered done.
+      </p>
+    </section>
+
+    <footer style="text-align:center; margin-top:30px; color:#777; font-size:13px;">
+      Generated on 2026-07-03
+    </footer>
+
+  </main>
+
+</body>
+</html>
