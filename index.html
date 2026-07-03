@@ -9,6 +9,54 @@
     padding: 28px;
     max-width: 700px;
   }
+
+  /* Friday celebration banner — matches the site's dark theme + blue accent */
+  #happy-friday-banner {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    z-index: 2147483646; /* just below the confetti canvas */
+    pointer-events: none;
+    padding: 24px 40px;
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgba(88,166,255,0.05), 0 8px 24px rgba(0,0,0,0.4);
+    text-align: center;
+    opacity: 0;
+    animation: hf-pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+               hf-fade-out 0.8s ease forwards 5s;
+  }
+  #happy-friday-banner .hf-text {
+    margin: 0;
+    font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 42px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #58a6ff;
+    text-shadow: 0 0 24px rgba(88,166,255,0.35);
+    white-space: nowrap;
+  }
+  #happy-friday-banner .hf-sub {
+    margin: 8px 0 0;
+    font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    color: #6e7681;
+  }
+  @keyframes hf-pop-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes hf-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+  @media (max-width: 480px) {
+    #happy-friday-banner .hf-text { font-size: 30px; }
+  }
 </style>
 </head>
 <body style="margin:0; padding:0; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#0d1117; color:#c9d1d9; -webkit-font-smoothing:antialiased;">
@@ -60,6 +108,175 @@
     </footer>
 
   </main>
+
+  <!-- Friday celebration banner (shown only on Fridays; hidden by default via CSS) -->
+  <div id="happy-friday-banner" role="status" aria-hidden="true">
+    <p class="hf-text">HAPPY FRIDAY</p>
+    <p class="hf-sub">Enjoy the weekend</p>
+  </div>
+
+  <!-- Auto-playing confetti + Friday detection: vanilla JS/CSS, self-contained, self-cleaning -->
+  <script>
+  (function () {
+    "use strict";
+
+    // ---- Friday detection (client-side, visitor's local date) ----
+    function isFriday() {
+      return new Date().getDay() === 5;
+    }
+    var festive = isFriday();
+
+    function showFridayBanner() {
+      var banner = document.getElementById("happy-friday-banner");
+      if (banner) {
+        banner.style.display = "block";
+        banner.setAttribute("aria-hidden", "false");
+      }
+    }
+
+    // ---- Confetti engine (canvas + requestAnimationFrame, no libraries) ----
+    var CANVAS_ID = "confetti-canvas-8f2a1c";
+
+    function startConfetti() {
+      if (document.getElementById(CANVAS_ID)) return; // guard against double-init
+
+      var canvas = document.createElement("canvas");
+      canvas.id = CANVAS_ID;
+      canvas.setAttribute("aria-hidden", "true");
+      canvas.style.position = "fixed";
+      canvas.style.top = "0";
+      canvas.style.left = "0";
+      canvas.style.width = "100vw";
+      canvas.style.height = "100vh";
+      canvas.style.pointerEvents = "none"; // never blocks clicks on the page
+      canvas.style.zIndex = "2147483647";  // above the Friday banner
+      canvas.style.background = "transparent";
+      document.body.appendChild(canvas);
+
+      var ctx = canvas.getContext("2d");
+      var dpr = window.devicePixelRatio || 1;
+      var viewWidth = window.innerWidth;
+      var viewHeight = window.innerHeight;
+
+      canvas.width = Math.floor(viewWidth * dpr);
+      canvas.height = Math.floor(viewHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Palette anchored to the page's blue accents (#58a6ff / #79c0ff),
+      // plus complements chosen for contrast against #0d1117 / #161b22.
+      var PALETTE = ["#58a6ff", "#79c0ff", "#f778ba", "#3fb950", "#f0883e", "#e6edf3"];
+      var GOLD_EXTRA = ["#ffd33d", "#f2cc60"]; // extra festive pieces on Fridays
+
+      var BASE_COUNT = festive ? 170 : 140;
+      var SPAWN_WINDOW_MS = 1400;   // stop spawning after ~1.4s
+      var TOTAL_LIFETIME_MS = 5200; // full teardown by ~5.2s
+
+      var particles = [];
+      var rafId = null;
+      var spawnIntervalId = null;
+      var startTime = null;
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+      function pick(arr) { return arr[(Math.random() * arr.length) | 0]; }
+
+      function spawnParticle() {
+        var colorPool = PALETTE;
+        if (festive && Math.random() < 0.25) colorPool = GOLD_EXTRA;
+        particles.push({
+          x: rand(0, viewWidth),
+          y: rand(-40, -10),
+          size: rand(6, 12),
+          color: pick(colorPool),
+          shape: Math.random() < 0.5 ? "rect" : "circle",
+          vy: rand(1.6, 3.4),
+          vx: rand(-0.6, 0.6),
+          wobble: rand(0, Math.PI * 2),
+          wobbleSpeed: rand(0.02, 0.05),
+          wobbleAmp: rand(0.4, 1.4),
+          rotation: rand(0, Math.PI * 2),
+          rotationSpeed: rand(-0.12, 0.12),
+          gravity: rand(0.01, 0.03)
+        });
+      }
+
+      function spawnBatch() {
+        var ticks = SPAWN_WINDOW_MS / 50;
+        var perTick = Math.ceil(BASE_COUNT / ticks);
+        for (var i = 0; i < perTick; i++) spawnParticle();
+      }
+
+      function updateAndDraw(elapsed) {
+        ctx.clearRect(0, 0, viewWidth, viewHeight);
+
+        var fadeStart = TOTAL_LIFETIME_MS - 900;
+        var globalFade = 1;
+        if (elapsed > fadeStart) {
+          globalFade = Math.max(0, 1 - (elapsed - fadeStart) / (TOTAL_LIFETIME_MS - fadeStart));
+        }
+
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.vy += p.gravity * 0.15;
+          p.y += p.vy;
+          p.wobble += p.wobbleSpeed;
+          p.x += p.vx + Math.sin(p.wobble) * p.wobbleAmp * 0.3;
+          p.rotation += p.rotationSpeed;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.globalAlpha = globalFade;
+          ctx.fillStyle = p.color;
+          if (p.shape === "rect") {
+            ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        particles = particles.filter(function (p) { return p.y < viewHeight + 60; });
+      }
+
+      function cleanup() {
+        if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+        if (spawnIntervalId !== null) { clearInterval(spawnIntervalId); spawnIntervalId = null; }
+        particles.length = 0;
+        if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        ctx = null;
+        canvas = null;
+      }
+
+      function loop(timestamp) {
+        if (startTime === null) startTime = timestamp;
+        var elapsed = timestamp - startTime;
+        if (elapsed >= TOTAL_LIFETIME_MS) { cleanup(); return; }
+        updateAndDraw(elapsed);
+        rafId = requestAnimationFrame(loop);
+      }
+
+      spawnIntervalId = setInterval(spawnBatch, 50);
+      setTimeout(function () {
+        if (spawnIntervalId !== null) { clearInterval(spawnIntervalId); spawnIntervalId = null; }
+      }, SPAWN_WINDOW_MS);
+
+      rafId = requestAnimationFrame(loop);
+    }
+
+    // ---- Kick everything off on load ----
+    function init() {
+      if (festive) showFridayBanner();
+      startConfetti();
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+  </script>
 
 </body>
 </html>
