@@ -111,8 +111,8 @@
 
   <!-- Friday celebration banner (shown only on Fridays; hidden by default via CSS) -->
   <div id="happy-friday-banner" role="status" aria-hidden="true">
-    <p class="hf-text">HAPPY FRIDAY</p>
-    <p class="hf-sub">Enjoy the weekend</p>
+    <p class="hf-text">HAPPY FRIDAY 🇦🇷</p>
+    <p class="hf-sub">¡Vamos Argentina! Enjoy the weekend 🏆⚽</p>
   </div>
 
   <!-- Auto-playing confetti + Friday detection: vanilla JS/CSS, self-contained, self-cleaning -->
@@ -162,10 +162,8 @@
       canvas.height = Math.floor(viewHeight * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Palette anchored to the page's blue accents (#58a6ff / #79c0ff),
-      // plus complements chosen for contrast against #0d1117 / #161b22.
-      var PALETTE = ["#58a6ff", "#79c0ff", "#f778ba", "#3fb950", "#f0883e", "#e6edf3"];
-      var GOLD_EXTRA = ["#ffd33d", "#f2cc60"]; // extra festive pieces on Fridays
+      // Argentina flag palette: skyblue and white.
+      var PALETTE = ["#87CEEB", "#FFFFFF"];
 
       var BASE_COUNT = festive ? 170 : 140;
       var SPAWN_WINDOW_MS = 1400;   // stop spawning after ~1.4s
@@ -180,13 +178,11 @@
       function pick(arr) { return arr[(Math.random() * arr.length) | 0]; }
 
       function spawnParticle() {
-        var colorPool = PALETTE;
-        if (festive && Math.random() < 0.25) colorPool = GOLD_EXTRA;
         particles.push({
           x: rand(0, viewWidth),
           y: rand(-40, -10),
           size: rand(6, 12),
-          color: pick(colorPool),
+          color: pick(PALETTE),
           shape: Math.random() < 0.5 ? "rect" : "circle",
           vy: rand(1.6, 3.4),
           vx: rand(-0.6, 0.6),
